@@ -4,7 +4,7 @@ import Cart from './components/Cart/Cart';
 import Layout from './components/Layout/Layout';
 import Products from './components/Shop/Products';
 import Notification from './components/UI/Notification';
-import { uiActions } from './store/ui-slice';
+import { fetchCartData, sendCartData } from './store/cart-actions';
 require('dotenv').config();
 
 let isInitial = true;
@@ -16,45 +16,17 @@ function App() {
 	const notification = useSelector((state) => state.ui.notification);
 
 	useEffect(() => {
-		const sendCartData = async () => {
-			dispatch(
-				uiActions.showNotification({
-					status: 'pending',
-					title: 'Sending...',
-					message: 'Sending cart data!',
-				})
-			);
+		dispatch(fetchCartData());
+	}, [dispatch]);
 
-			const response = await fetch(process.env.REACT_APP_FIREBASE_DB, {
-				method: 'PUT',
-				body: JSON.stringify(cart),
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to send cart data!');
-			}
-
-			dispatch(
-				uiActions.showNotification({
-					status: 'success',
-					title: 'Success!',
-					message: 'Sent cart data successfully!',
-				})
-			);
-		};
+	useEffect(() => {
 		if (isInitial) {
 			isInitial = false;
 			return;
 		}
-		sendCartData().catch((err) => {
-			dispatch(
-				uiActions.showNotification({
-					status: 'error',
-					title: 'Error!',
-					message: 'Sent cart data failed!',
-				})
-			);
-		});
+		if (cart.changed) {
+			dispatch(sendCartData(cart));
+		}
 	}, [cart, dispatch]);
 
 	return (
